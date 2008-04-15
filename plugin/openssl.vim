@@ -1,4 +1,4 @@
-" openssl.vim version 3.0 2007 Noah Spurrier <noah@noah.org>
+" openssl.vim version 3.2 2008 Noah Spurrier <noah@noah.org>
 "
 " == Edit OpenSSL encrypted files and turn Vim into a Password Safe! ==
 "
@@ -6,9 +6,10 @@
 " The file must have the extension of one of the ciphers used by OpenSSL. For
 " example:
 "
-"    .des3 .aes .bf .bfa .idea .cast .rc2 .rc4 .rc5
+"    .des3 .aes .bf .bfa .idea .cast .rc2 .rc4 .rc5 (.bfa is base64 ASCII
+"    encoded blowfish.)
 "
-" This will turn off the swap file and .viminfo log. The `openssl` command
+" This will turn off the swap file and the .viminfo log. The `openssl` command
 " line tool must be in the path.
 "
 " == Install ==
@@ -36,7 +37,7 @@
 " 
 " Any notes under the headline will be inside the fold until the next headline
 " is reached. The SPACE key will toggle a fold open and closed. The q key will
-" quit Vim. Create the following example file named ~/.auth.des3:
+" quit Vim. Create the following example file named ~/.auth.bfa:
 "
 "     == Colo server ==
 "
@@ -48,13 +49,26 @@
 "
 " Then create this bash alias:
 "
-"     alias auth='view ~/.auth.des3'
+"     alias auth='view ~/.auth.bfa'
 "
 " Now you can view your password safe by typing 'auth'. When Vim starts all
 " the password information will be hidden under the headlines. To view the
-" password information put the cursor on the headline and press SPACE.
+" password information put the cursor on the headline and press SPACE. When
+" you write an encrypted file a backup will automatically be made.
 "
-" Thanks to Tom Purl for the des3 tip.
+" This plugin can also make a backup of an encrypted file before writing
+" changes. This helps guard against the situation where you may edit a file
+" and write changes with the wrong password. You can still go back to the
+" previous backup version. The backup file will have the same name as the
+" original file with .bak before the original extension. For example:
+"
+"     .auth.bfa  -->  .auth.bak.bfa
+"
+" To turn on backups put the following global definition in your .vimrc file:
+" 
+"     let g:openssl_backup = 1
+"
+" Thanks to Tom Purl for the original des3 tip.
 "
 " I release all copyright claims. This code is in the public domain.
 " Permission is granted to use, copy modify, distribute, and sell this
@@ -63,8 +77,14 @@
 " its use. Further, I am under no obligation to maintain or extend this
 " software. It is provided on an 'as is' basis without any expressed or
 " implied warranty.
+"
+" $Id: openssl.vim 189 2008-01-28 20:44:44Z root $
 
 augroup openssl_encrypted
+if exists("openssl_encrypted_loaded")
+    finish
+endif
+let openssl_encrypted_loaded = 1
 autocmd!
 
 function! s:OpenSSLReadPre()
@@ -111,7 +131,14 @@ function! s:OpenSSLWritePre()
     set shell=/bin/sh
     set bin
 
-    let l:cipher = expand("%:e")
+    if !exists("g:openssl_backup")
+        let g:openssl_backup=0
+    endif
+    if (g:openssl_backup)
+        silent! execute '!cp % %:r.bak.%:e'
+    endif
+
+    let l:cipher = expand("<afile>:e") 
     if l:cipher == "aes"
         let l:cipher = "aes-256-cbc"
     endif
