@@ -34,7 +34,7 @@
 " This plugin will fold on wiki-style headlines in the following format:
 "
 "     == This is a headline ==
-" 
+"
 " Any notes under the headline will be inside the fold until the next headline
 " is reached. The SPACE key will toggle a fold open and closed. The q key will
 " quit Vim. Create the following example file named ~/.auth.bfa:
@@ -65,7 +65,7 @@
 "     .auth.bfa  -->  .auth.bak.bfa
 "
 " To turn on backups put the following global definition in your .vimrc file:
-" 
+"
 "     let g:openssl_backup = 1
 "
 " Thanks to Tom Purl for the original des3 tip.
@@ -102,9 +102,9 @@ function! s:OpenSSLReadPost()
     endif
     if l:cipher == "bfa"
         let l:cipher = "bf"
-        let l:expr = "0,$!openssl " . l:cipher . " -d -a -salt"
+        let l:expr = "0,$!openssl " . l:cipher . " -d -md MD5 -a -salt"
     else
-        let l:expr = "0,$!openssl " . l:cipher . " -d -salt"
+        let l:expr = "0,$!openssl " . l:cipher . " -d -md MD5 -salt"
     endif
 
     silent! execute l:expr
@@ -138,15 +138,15 @@ function! s:OpenSSLWritePre()
         silent! execute '!cp % %:r.bak.%:e'
     endif
 
-    let l:cipher = expand("<afile>:e") 
+    let l:cipher = expand("<afile>:e")
     if l:cipher == "aes"
         let l:cipher = "aes-256-cbc"
     endif
     if l:cipher == "bfa"
         let l:cipher = "bf"
-        let l:expr = "0,$!openssl " . l:cipher . " -e -a -salt"
+        let l:expr = "0,$!openssl " . l:cipher . " -e -md MD5 -a -salt"
     else
-        let l:expr = "0,$!openssl " . l:cipher . " -e -salt"
+        let l:expr = "0,$!openssl " . l:cipher . " -e -md MD5 -salt"
     endif
 
     silent! execute l:expr
@@ -198,4 +198,3 @@ autocmd BufReadPost,FileReadPost   .auth.bfa set updatetime=300000
 autocmd CursorHold                 .auth.bfa quit
 
 augroup END
-
